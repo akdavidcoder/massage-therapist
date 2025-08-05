@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
+import { requireAdmin } from "@/lib/auth"
 
 // GET - Fetch single service
 export const GET = requireAdmin(async (request: NextRequest, { params }: { params: { id: string } }) => {
@@ -37,7 +37,7 @@ export const PUT = requireAdmin(async (request: NextRequest, { params }: { param
       return NextResponse.json({ error: "Invalid service ID" }, { status: 400 })
     }
 
-    const { name, description, benefits, duration, prices, image, available } = body
+    const { name, description, benefits, duration, prices, image, available, models } = body
 
     if (!name || !description || !duration || !prices) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -50,6 +50,7 @@ export const PUT = requireAdmin(async (request: NextRequest, { params }: { param
       duration: duration || [],
       prices: prices || {},
       image: image || "",
+      models: models || [],
       available: available !== undefined ? available : true,
       updatedAt: new Date(),
     }

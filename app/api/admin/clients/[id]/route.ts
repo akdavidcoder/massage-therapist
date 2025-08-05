@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 
-export const GET = requireAdmin(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const client = await clientPromise
     const db = client.db("massage_therapy")
@@ -33,9 +32,9 @@ export const GET = requireAdmin(async (request: NextRequest, { params }: { param
     console.error("Get Client API Error:", error)
     return NextResponse.json({ error: "Failed to fetch client" }, { status: 500 })
   }
-})
+}
 
-export const PUT = requireAdmin(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
     const client = await clientPromise
@@ -67,9 +66,9 @@ export const PUT = requireAdmin(async (request: NextRequest, { params }: { param
     console.error("Update Client API Error:", error)
     return NextResponse.json({ error: "Failed to update client" }, { status: 500 })
   }
-})
+}
 
-export const DELETE = requireAdmin(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const client = await clientPromise
     const db = client.db("massage_therapy")
@@ -98,4 +97,4 @@ export const DELETE = requireAdmin(async (request: NextRequest, { params }: { pa
     console.error("Delete Client API Error:", error)
     return NextResponse.json({ error: "Failed to delete client" }, { status: 500 })
   }
-})
+}

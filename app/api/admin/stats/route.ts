@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"
 
-export const GET = requireAdmin(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
     const client = await clientPromise
     const db = client.db("massage_therapy")
@@ -134,9 +133,19 @@ export const GET = requireAdmin(async (request: NextRequest) => {
       color: colors[index % colors.length],
     }))
 
+    // Get total bookings count
+    const totalBookings = await db.collection("bookings").countDocuments()
+    
+    // Get total therapists count
+    const totalTherapists = await db.collection("therapists").countDocuments({ status: "active" })
+
     return NextResponse.json({
-      todayBookings,
+      totalBookings,
+      activeClients: totalClients,
       monthlyRevenue,
+      totalTherapists,
+      // Keep the additional stats for potential future use
+      todayBookings,
       pendingAppointments,
       returningClients,
       weeklyTrends: formattedTrends,
@@ -146,4 +155,4 @@ export const GET = requireAdmin(async (request: NextRequest) => {
     console.error("Admin Stats API Error:", error)
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 })
   }
-})
+}

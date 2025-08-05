@@ -1,15 +1,21 @@
+// app/api/bookings/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import clientPromise from "@/lib/mongodb"
 import type { Booking } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
+  // 1. Log that the API endpoint was hit
+  console.log("--- CREATE BOOKING API [POST] HIT ---");
+
   try {
     const body = await request.json()
+    // 2. Log the raw data received from the booking form
+    console.log("Received booking data from form:", body);
+
     const client = await clientPromise
     const db = client.db("massage_therapy")
 
-    // Create booking object
-     const booking: Partial<Booking> = {
+    const booking: Partial<Booking> = {
       clientName: body.clientName,
       clientEmail: body.clientEmail,
       clientPhone: body.clientPhone,
@@ -24,17 +30,33 @@ export async function POST(request: NextRequest) {
       status: "pending",
       paymentStatus: "pending",
       paymentMethod: "crypto",
-      walletAddress: body.walletAddress,
       cryptoAmount: body.price,
+      model: body.model, // Added selected model
       notes: body.notes,
       createdAt: new Date(),
     }
 
-    // Insert booking
+    // Conditionally add the customer's sending address if it was provided
+    if (body.walletAddress && typeof body.walletAddress === 'string' && body.walletAddress.trim() !== '') {
+      booking.walletAddress = body.walletAddress.trim();
+    }
+
+    // 3. Log the final object just before it's inserted into the database
+    console.log("Attempting to insert this object into DB:", booking);
+
+    // Insert booking into the 'bookings' collection
     const result = await db.collection("bookings").insertOne(booking)
 
-    // Also create/update client in clients collection
-    const clientDataForSet = { // Data to always set/update
+    // 4. Log the result from the database operation
+    console.log("Database insertion result:", result);
+
+    // Check if the insertion was successful
+    if (!result.insertedId) {
+      throw new Error("Database insertion failed, no insertedId returned.");
+    }
+
+    // Also create/update client in the 'clients' collection
+    const clientDataForSet = {
       name: body.clientName,
       email: body.clientEmail,
       phone: body.clientPhone,
@@ -44,25 +66,26 @@ export async function POST(request: NextRequest) {
 
     await db.collection("clients").updateOne(
       { email: body.clientEmail },
-      {
-        $set: clientDataForSet, // Fields that are always updated
-        $setOnInsert: { createdAt: new Date() }, // Field only set on insert
-      },
+      { $set: clientDataForSet, $setOnInsert: { createdAt: new Date() } },
       { upsert: true },
     )
-
+    
+    console.log("Client data upserted successfully for:", body.clientEmail);
 
     return NextResponse.json({
       success: true,
       bookingId: result.insertedId,
     })
   } catch (error) {
-    console.error("Booking API Error:", error)
+    // 5. Log any errors that occur during the process
+    console.error("!!! BOOKING API [POST] ERROR:", error);
     return NextResponse.json({ error: "Failed to create booking" }, { status: 500 })
   }
 }
 
 export async function GET(request: NextRequest) {
+  // Log that the GET endpoint was hit
+  console.log("--- GET ALL BOOKINGS API [GET] HIT ---");
   try {
     const client = await clientPromise
     const db = client.db("massage_therapy")
@@ -79,12 +102,16 @@ export async function GET(request: NextRequest) {
       nextDay.setDate(nextDay.getDate() + 1)
       query.date = { $gte: selectedDate, $lt: nextDay }
     }
+    
+    console.log("Fetching bookings with query:", query);
 
     const bookings = await db.collection("bookings").find(query).sort({ date: 1, time: 1 }).toArray()
+    
+    console.log(`Found ${bookings.length} bookings.`);
 
     return NextResponse.json(bookings)
   } catch (error) {
-    console.error("Get Bookings API Error:", error)
+    console.error("!!! GET BOOKINGS API [GET] ERROR:", error)
     return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 })
   }
 }

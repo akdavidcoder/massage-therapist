@@ -1,15 +1,14 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,63 +28,118 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast"
-import { Plus, Edit, Trash2, Clock, DollarSign, Eye, EyeOff, Search } from "lucide-react"
-import type { Service } from "@/lib/types"
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Clock,
+  DollarSign,
+  Eye,
+  EyeOff,
+  Search,
+} from "lucide-react";
+import type { Service, ServiceModel } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+type FormPrices = {
+  [key: number]: number; // Generic index signature
+};
+
+interface Therapist {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  specialties: string[];
+  bio: string;
+  experience: number;
+  status: 'active' | 'inactive';
+  imageUrl: string;
+  gender: 'male' | 'female';
+}
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingService, setEditingService] = useState<Service | null>(null)
+  const [services, setServices] = useState<Service[]>([]);
+  const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     benefits: [""],
     duration: [60],
-    prices: { 60: 120 },
+    prices: { 60: 120 } as FormPrices,
     image: "",
     available: true,
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { toast } = useToast()
+    models: [] as ServiceModel[],
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchServices()
-  }, [])
+    fetchServices();
+    fetchTherapists();
+  }, []);
 
   const fetchServices = async () => {
     try {
-      const response = await fetch("/api/admin/services")
+      const response = await fetch("/api/admin/services");
       if (response.ok) {
-        const data = await response.json()
-        setServices(data)
+        const data = await response.json();
+        setServices(data);
       } else {
-        throw new Error("Failed to fetch services")
+        throw new Error("Failed to fetch services");
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to fetch services",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const fetchTherapists = async () => {
+    try {
+      const response = await fetch("/api/admin/therapists");
+      if (response.ok) {
+        const data = await response.json();
+        setTherapists(data.filter((t: Therapist) => t.status === 'active'));
+      }
+    } catch (error) {
+      console.error('Error fetching therapists:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      const url = editingService ? `/api/admin/services/${editingService._id}` : "/api/admin/services"
-      const method = editingService ? "PUT" : "POST"
+      const url = editingService
+        ? `/api/admin/services/${editingService._id}`
+        : "/api/admin/services";
+      const method = editingService ? "PUT" : "POST";
 
       // Filter out empty benefits
-      const cleanedBenefits = formData.benefits.filter((benefit) => benefit.trim() !== "")
+      const cleanedBenefits = formData.benefits.filter(
+        (benefit) => benefit.trim() !== ""
+      );
+      // Filter out models without names
+      const cleanedModels = formData.models.filter(
+        (model) => model.name.trim() !== ""
+      );
 
       const response = await fetch(url, {
         method,
@@ -95,34 +149,38 @@ export default function ServicesPage() {
         body: JSON.stringify({
           ...formData,
           benefits: cleanedBenefits,
+          models: cleanedModels,
         }),
-      })
+      });
 
       if (response.ok) {
         toast({
           title: "Success",
-          description: `Service ${editingService ? "updated" : "created"} successfully`,
-        })
-        setIsDialogOpen(false)
-        resetForm()
-        fetchServices()
+          description: `Service ${
+            editingService ? "updated" : "created"
+          } successfully`,
+        });
+        setIsDialogOpen(false);
+        resetForm();
+        fetchServices();
       } else {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to save service")
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save service");
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save service",
+        description:
+          error instanceof Error ? error.message : "Failed to save service",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleEdit = (service: Service) => {
-    setEditingService(service)
+    setEditingService(service);
     setFormData({
       name: service.name,
       description: service.description,
@@ -131,34 +189,36 @@ export default function ServicesPage() {
       prices: service.prices,
       image: service.image || "",
       available: service.available,
-    })
-    setIsDialogOpen(true)
-  }
+      models: service.models || [],
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async (serviceId: string) => {
     try {
       const response = await fetch(`/api/admin/services/${serviceId}`, {
         method: "DELETE",
-      })
+      });
 
       if (response.ok) {
         toast({
           title: "Success",
           description: "Service deleted successfully",
-        })
-        fetchServices()
+        });
+        fetchServices();
       } else {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to delete service")
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete service");
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete service",
+        description:
+          error instanceof Error ? error.message : "Failed to delete service",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const toggleAvailability = async (service: Service) => {
     try {
@@ -171,25 +231,27 @@ export default function ServicesPage() {
           ...service,
           available: !service.available,
         }),
-      })
+      });
 
       if (response.ok) {
         toast({
           title: "Success",
-          description: `Service ${!service.available ? "enabled" : "disabled"} successfully`,
-        })
-        fetchServices()
+          description: `Service ${
+            !service.available ? "enabled" : "disabled"
+          } successfully`,
+        });
+        fetchServices();
       } else {
-        throw new Error("Failed to update service")
+        throw new Error("Failed to update service");
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to update service availability",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -200,38 +262,39 @@ export default function ServicesPage() {
       prices: { 60: 120 },
       image: "",
       available: true,
-    })
-    setEditingService(null)
-  }
+      models: [],
+    });
+    setEditingService(null);
+  };
 
   const addBenefit = () => {
     setFormData({
       ...formData,
       benefits: [...formData.benefits, ""],
-    })
-  }
+    });
+  };
 
   const updateBenefit = (index: number, value: string) => {
-    const newBenefits = [...formData.benefits]
-    newBenefits[index] = value
+    const newBenefits = [...formData.benefits];
+    newBenefits[index] = value;
     setFormData({
       ...formData,
       benefits: newBenefits,
-    })
-  }
+    });
+  };
 
   const removeBenefit = (index: number) => {
     if (formData.benefits.length > 1) {
-      const newBenefits = formData.benefits.filter((_, i) => i !== index)
+      const newBenefits = formData.benefits.filter((_, i) => i !== index);
       setFormData({
         ...formData,
         benefits: newBenefits,
-      })
+      });
     }
-  }
+  };
 
   const addDuration = () => {
-    const newDuration = 30
+    const newDuration = 30;
     if (!formData.duration.includes(newDuration)) {
       setFormData({
         ...formData,
@@ -240,22 +303,22 @@ export default function ServicesPage() {
           ...formData.prices,
           [newDuration]: 80,
         },
-      })
+      });
     }
-  }
+  };
 
   const removeDuration = (duration: number) => {
     if (formData.duration.length > 1) {
-      const newDuration = formData.duration.filter((d) => d !== duration)
-      const newPrices = { ...formData.prices }
-      delete newPrices[duration]
+      const newDuration = formData.duration.filter((d) => d !== duration);
+      const newPrices = { ...formData.prices };
+      delete newPrices[duration];
       setFormData({
         ...formData,
         duration: newDuration,
         prices: newPrices,
-      })
+      });
     }
-  }
+  };
 
   const updatePrice = (duration: number, price: number) => {
     setFormData({
@@ -264,10 +327,48 @@ export default function ServicesPage() {
         ...formData.prices,
         [duration]: price,
       },
-    })
-  }
+    });
+  };
 
-  const filteredServices = services.filter((service) => service.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const addModel = () => {
+    // Don't add empty model, user should select from dropdown
+  };
+
+  const addTherapistToService = (therapistId: string) => {
+    const therapist = therapists.find(t => t._id === therapistId);
+    if (therapist && !formData.models.find(m => m.name === therapist.name)) {
+      const newModel: ServiceModel = {
+        name: therapist.name,
+        gender: therapist.gender,
+        imageUrl: therapist.imageUrl
+      };
+      setFormData({
+        ...formData,
+        models: [...formData.models, newModel]
+      });
+    }
+  };
+
+  const updateModel = (
+    index: number,
+    field: keyof ServiceModel,
+    value: string
+  ) => {
+    const newModels = [...formData.models];
+    newModels[index] = { ...newModels[index], [field]: value } as ServiceModel;
+    setFormData({ ...formData, models: newModels });
+  };
+
+  const removeModel = (index: number) => {
+    setFormData({
+      ...formData,
+      models: formData.models.filter((_, i) => i !== index),
+    });
+  };
+
+  const filteredServices = services.filter((service) =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -281,7 +382,7 @@ export default function ServicesPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -290,7 +391,9 @@ export default function ServicesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Services Management</h1>
-          <p className="text-muted-foreground">Manage your massage therapy services, pricing, and availability</p>
+          <p className="text-muted-foreground">
+            Manage your massage therapy services, pricing, and availability
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -301,9 +404,13 @@ export default function ServicesPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingService ? "Edit Service" : "Add New Service"}</DialogTitle>
+              <DialogTitle>
+                {editingService ? "Edit Service" : "Add New Service"}
+              </DialogTitle>
               <DialogDescription>
-                {editingService ? "Update the service details below." : "Create a new massage therapy service."}
+                {editingService
+                  ? "Update the service details below."
+                  : "Create a new massage therapy service."}
               </DialogDescription>
             </DialogHeader>
 
@@ -315,7 +422,9 @@ export default function ServicesPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     placeholder="e.g., Swedish Massage"
                     required
                   />
@@ -326,7 +435,9 @@ export default function ServicesPage() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder="Describe the massage technique and its purpose..."
                     rows={3}
                     required
@@ -334,13 +445,24 @@ export default function ServicesPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="image">Image URL (Optional)</Label>
+                  <Label htmlFor="image">Service Image URL (Optional)</Label>
                   <Input
                     id="image"
                     value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
+                    onChange={(e) =>
+                      setFormData({ ...formData, image: e.target.value })
+                    }
+                    placeholder="https://example.com/service-image.jpg"
                   />
+                  {formData.image && (
+                    <div className="mt-2">
+                      <img
+                        src={formData.image}
+                        alt="Service Preview"
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -356,16 +478,100 @@ export default function ServicesPage() {
                         placeholder="Enter a benefit..."
                       />
                       {formData.benefits.length > 1 && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => removeBenefit(index)}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeBenefit(index)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
                   ))}
-                  <Button type="button" variant="outline" size="sm" onClick={addBenefit}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addBenefit}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Benefit
                   </Button>
+                </div>
+              </div>
+
+              {/* Models */}
+              <div>
+                <Label>Therapists (Models)</Label>
+                <div className="space-y-3 mt-2">
+                  {formData.models.map((model, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {model.imageUrl && (
+                            <img
+                              src={model.imageUrl}
+                              alt={model.name}
+                              className="w-12 h-12 object-cover rounded-full"
+                            />
+                          )}
+                          <div>
+                            <div className="font-medium">{model.name}</div>
+                            <div className="text-sm text-muted-foreground capitalize">
+                              {model.gender}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeModel(index)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Add Therapist Dropdown */}
+                  <div className="border-2 border-dashed border-muted rounded-lg p-4">
+                    <Label>Add Therapist</Label>
+                    <Select onValueChange={addTherapistToService}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Select a therapist to add" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {therapists
+                          .filter(therapist => !formData.models.some(model => model.name === therapist.name))
+                          .map((therapist) => (
+                            <SelectItem key={therapist._id} value={therapist._id}>
+                              <div className="flex items-center gap-2">
+                                {therapist.imageUrl && (
+                                  <img
+                                    src={therapist.imageUrl}
+                                    alt={therapist.name}
+                                    className="w-6 h-6 object-cover rounded-full"
+                                  />
+                                )}
+                                <span>{therapist.name}</span>
+                                <span className="text-xs text-muted-foreground capitalize">({therapist.gender})</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {therapists.filter(therapist => !formData.models.some(model => model.name === therapist.name)).length === 0 && (
+                          <SelectItem value="no-therapists" disabled>
+                            All therapists already added
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
@@ -374,7 +580,10 @@ export default function ServicesPage() {
                 <Label>Duration & Pricing</Label>
                 <div className="space-y-3 mt-2">
                   {formData.duration.map((duration) => (
-                    <div key={duration} className="flex items-center gap-4 p-3 border rounded-lg">
+                    <div
+                      key={duration}
+                      className="flex items-center gap-4 p-3 border rounded-lg"
+                    >
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium">{duration} min</span>
@@ -384,13 +593,23 @@ export default function ServicesPage() {
                         <Input
                           type="number"
                           value={formData.prices[duration] || 0}
-                          onChange={(e) => updatePrice(duration, Number.parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updatePrice(
+                              duration,
+                              Number.parseInt(e.target.value)
+                            )
+                          }
                           className="w-24"
                           min="0"
                         />
                       </div>
                       {formData.duration.length > 1 && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => removeDuration(duration)}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeDuration(duration)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
@@ -407,21 +626,23 @@ export default function ServicesPage() {
                           if (!formData.duration.includes(duration)) {
                             setFormData({
                               ...formData,
-                              duration: [...formData.duration, duration].sort((a, b) => a - b),
+                              duration: [...formData.duration, duration].sort(
+                                (a, b) => a - b
+                              ),
                               prices: {
                                 ...formData.prices,
                                 [duration]:
                                   duration === 30
                                     ? 80
                                     : duration === 45
-                                      ? 100
-                                      : duration === 60
-                                        ? 120
-                                        : duration === 90
-                                          ? 180
-                                          : 240,
+                                    ? 100
+                                    : duration === 60
+                                    ? 120
+                                    : duration === 90
+                                    ? 180
+                                    : 240,
                               },
-                            })
+                            });
                           }
                         }}
                         disabled={formData.duration.includes(duration)}
@@ -438,17 +659,27 @@ export default function ServicesPage() {
                 <Switch
                   id="available"
                   checked={formData.available}
-                  onCheckedChange={(checked) => setFormData({ ...formData, available: checked })}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, available: checked })
+                  }
                 />
                 <Label htmlFor="available">Service Available</Label>
               </div>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : editingService ? "Update Service" : "Create Service"}
+                  {isSubmitting
+                    ? "Saving..."
+                    : editingService
+                    ? "Update Service"
+                    : "Create Service"}
                 </Button>
               </DialogFooter>
             </form>
@@ -475,7 +706,10 @@ export default function ServicesPage() {
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredServices.map((service) => (
-          <Card key={service._id} className="relative">
+          <Card
+            key={service._id?.toString() || Math.random().toString(36)}
+            className="relative"
+          >
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">{service.name}</CardTitle>
@@ -487,15 +721,23 @@ export default function ServicesPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleAvailability(service)}
-                    title={service.available ? "Disable service" : "Enable service"}
+                    title={
+                      service.available ? "Disable service" : "Enable service"
+                    }
                   >
-                    {service.available ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    {service.available ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground line-clamp-3">{service.description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {service.description}
+              </p>
 
               {/* Benefits */}
               {service.benefits.length > 0 && (
@@ -509,9 +751,39 @@ export default function ServicesPage() {
                       </li>
                     ))}
                     {service.benefits.length > 3 && (
-                      <li className="text-xs text-muted-foreground">+{service.benefits.length - 3} more...</li>
+                      <li className="text-xs text-muted-foreground">
+                        +{service.benefits.length - 3} more...
+                      </li>
                     )}
                   </ul>
+                </div>
+              )}
+
+              {/* Therapists */}
+              {service.models && service.models.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Therapists:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {service.models.slice(0, 3).map((model, idx) => (
+                      <div key={idx} className="flex items-center">
+                        {model.imageUrl ? (
+                          <img
+                            src={model.imageUrl}
+                            alt={model.name}
+                            className="w-6 h-6 rounded-full object-cover mr-1"
+                          />
+                        ) : (
+                          <div className="bg-gray-200 border rounded-full w-6 h-6 mr-1" />
+                        )}
+                        <span className="text-xs">{model.name}</span>
+                      </div>
+                    ))}
+                    {service.models.length > 3 && (
+                      <span className="text-xs text-muted-foreground">
+                        +{service.models.length - 3} more
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -520,8 +792,12 @@ export default function ServicesPage() {
                 <h4 className="font-medium text-sm mb-2">Pricing:</h4>
                 <div className="flex flex-wrap gap-2">
                   {service.duration.map((duration) => (
-                    <div key={duration} className="bg-muted rounded-md px-2 py-1 text-xs">
-                      {duration}min - ${service.prices[duration]}
+                    <div
+                      key={duration}
+                      className="bg-muted rounded-md px-2 py-1 text-xs"
+                    >
+                      {duration}min - $
+                      {service.prices[duration as keyof typeof service.prices]}
                     </div>
                   ))}
                 </div>
@@ -529,7 +805,11 @@ export default function ServicesPage() {
 
               {/* Actions */}
               <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(service)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(service)}
+                >
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
@@ -544,14 +824,17 @@ export default function ServicesPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Service</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete "{service.name}"? This action cannot be undone and will fail if
-                        there are existing bookings for this service.
+                        Are you sure you want to delete "{service.name}"? This
+                        action cannot be undone and will fail if there are
+                        existing bookings for this service.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => handleDelete(service._id)}
+                        onClick={() =>
+                          service._id && handleDelete(service._id.toString())
+                        }
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         Delete Service
@@ -568,7 +851,9 @@ export default function ServicesPage() {
       {filteredServices.length === 0 && (
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
-            {searchTerm ? "No services found matching your search." : "No services created yet."}
+            {searchTerm
+              ? "No services found matching your search."
+              : "No services created yet."}
           </div>
           {!searchTerm && (
             <Button onClick={() => setIsDialogOpen(true)}>
@@ -579,5 +864,5 @@ export default function ServicesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

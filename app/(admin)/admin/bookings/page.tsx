@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Search, CheckCircle, XCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Calendar, Search, CheckCircle, XCircle, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 
+// Define the shape of a Booking object
 interface Booking {
   _id: string
   clientName: string
@@ -29,25 +31,36 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchBookings()
   }, [])
 
+  // Fetches all bookings from the public API endpoint
   const fetchBookings = async () => {
+    setLoading(true);
     try {
       const response = await fetch("/api/bookings")
       if (response.ok) {
         const data = await response.json()
         setBookings(data)
+      } else {
+        throw new Error("Failed to fetch bookings from server.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch bookings:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Could not fetch bookings.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false)
     }
   }
 
+  // Calls the admin API to update a booking's status
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
       const response = await fetch(`/api/admin/bookings/${bookingId}`, {
@@ -56,13 +69,19 @@ export default function BookingsPage() {
         body: JSON.stringify({ status: newStatus }),
       })
       if (response.ok) {
-        fetchBookings() // Refresh the list
+        toast({ title: "Success", description: `Booking status updated to ${newStatus}.` });
+        fetchBookings() // Refresh the list after updating
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update status.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update booking:", error)
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   }
 
+  // Filter bookings based on search term and status filter
   const filteredBookings = bookings.filter((booking) => {
     const matchesSearch =
       booking.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,18 +90,14 @@ export default function BookingsPage() {
     return matchesSearch && matchesStatus
   })
 
+  // Helper function to determine badge color based on status
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return "bg-green-100 text-green-800"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "completed":
-        return "bg-blue-100 text-blue-800"
-      case "cancelled":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+      case "confirmed": return "bg-green-100 text-green-800 border-green-200";
+      case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "completed": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "cancelled": return "bg-red-100 text-red-800 border-red-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   }
 
@@ -90,10 +105,8 @@ export default function BookingsPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Bookings</h1>
-        <div className="animate-pulse space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-20 bg-gray-200 rounded"></div>
-          ))}
+        <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
         </div>
       </div>
     )
@@ -149,7 +162,7 @@ export default function BookingsPage() {
                     <Badge className={getStatusColor(booking.status)}>{booking.status}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{booking.clientEmail}</p>
-                  <div className="flex items-center space-x-4 text-sm">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="flex items-center">
                       <Calendar className="w-4 h-4 mr-1" />
                       {format(new Date(booking.date), "MMM d, yyyy")} at {booking.time}
@@ -160,7 +173,7 @@ export default function BookingsPage() {
                     <span className="font-medium">${booking.price}</span>
                   </div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
                   {booking.status === "pending" && (
                     <>
                       <Button size="sm" onClick={() => updateBookingStatus(booking._id, "confirmed")}>
@@ -175,7 +188,7 @@ export default function BookingsPage() {
                   )}
                   {booking.status === "confirmed" && (
                     <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking._id, "completed")}>
-                      Mark Complete
+                      Mark as Completed
                     </Button>
                   )}
                 </div>
@@ -185,7 +198,7 @@ export default function BookingsPage() {
         ))}
       </div>
 
-      {filteredBookings.length === 0 && (
+      {filteredBookings.length === 0 && !loading && (
         <Card>
           <CardContent className="p-12 text-center">
             <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />

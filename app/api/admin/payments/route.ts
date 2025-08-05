@@ -1,3 +1,4 @@
+// api/admin/payments/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"

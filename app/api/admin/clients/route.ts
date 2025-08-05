@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"
 
-export const GET = requireAdmin(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
     const client = await clientPromise
     const db = client.db("massage_therapy")
@@ -73,4 +72,4 @@ export const GET = requireAdmin(async (request: NextRequest) => {
     console.error("Get Clients API Error:", error)
     return NextResponse.json({ error: "Failed to fetch clients" }, { status: 500 })
   }
-})
+}

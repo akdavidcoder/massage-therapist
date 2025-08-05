@@ -1,130 +1,87 @@
-"use client"
+'use client';
 
-import type React from "react"
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Lock, User } from "lucide-react"
+const LoginPage = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-export default function AdminLoginPage() {
-  console.log("AdminLoginPage: Rendering...")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError('');
+    
     try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
-      })
+        body: JSON.stringify({ username, password }),
+      });
 
       if (response.ok) {
-        toast({
-          title: "Login Successful",
-          description: "Welcome to the admin dashboard!",
-        })
-        setIsLoading(false) // Set loading to false before redirecting
-
-        // Use setTimeout with router.replace for a more controlled client-side navigation
-        // This gives the toast a moment to appear and ensures the navigation is handled by Next.js router
-        setTimeout(() => {
-          router.replace("/admin")
-        }, 100) // A small delay (e.g., 100ms)
-
-        return // Crucial: Stop further execution of this function
+        router.push('/admin');
+        router.refresh();
       } else {
-        const data = await response.json()
-        toast({
-          title: "Login Failed",
-          description: data.error || "Invalid credentials",
-          variant: "destructive",
-        })
+        const data = await response.json();
+        setError(data.message || 'Invalid credentials');
       }
-    } catch (error) {
-      toast({
-        title: "Login Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-      })
+    } catch (err) {
+      setError('An error occurred. Please try again.');
     } finally {
-      // Only reset isLoading if the redirect didn't happen (i.e., if still on the login page)
-      // This check is a safeguard, as 'return' above should prevent this from being reached on success.
-      if (window.location.pathname === "/admin/login") {
-        setIsLoading(false)
-      }
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">S</span>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <form onSubmit={handleSubmit} className="p-6 bg-white rounded shadow-md w-96">
+        <h2 className="mb-4 text-xl font-bold">Admin Login</h2>
+        
+        {error && (
+          <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
           </div>
-          <CardTitle className="text-2xl">Admin Login</CardTitle>
-          <p className="text-muted-foreground">Access your massage therapy admin dashboard</p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@massagetherapy.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing In..." : "Sign In"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        )}
+        
+        {/* <div className="mb-4 p-2 bg-blue-100 border border-blue-400 text-blue-700 rounded text-sm">
+          <strong>Demo Credentials:</strong><br />
+          Username: admin<br />
+          Password: password
+        </div> */}
+        
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="mb-2 p-2 border border-gray-300 rounded w-full"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="mb-4 p-2 border border-gray-300 rounded w-full"
+          required
+        />
+        <button 
+          type="submit" 
+          disabled={isLoading}
+          className="w-full p-2 text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
     </div>
-  )
-}
+  );
+};
+
+export default LoginPage;
+

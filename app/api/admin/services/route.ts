@@ -1,10 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"
 import type { Service } from "@/lib/types"
 
 // GET - Fetch all services
-export const GET = requireAdmin(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
     const client = await clientPromise
     const db = client.db("massage_therapy")
@@ -16,10 +15,10 @@ export const GET = requireAdmin(async (request: NextRequest) => {
     console.error("Get Services API Error:", error)
     return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 })
   }
-})
+}
 
 // POST - Create new service
-export const POST = requireAdmin(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const client = await clientPromise
@@ -55,4 +54,4 @@ export const POST = requireAdmin(async (request: NextRequest) => {
     console.error("Create Service API Error:", error)
     return NextResponse.json({ error: "Failed to create service" }, { status: 500 })
   }
-})
+}
