@@ -1,36 +1,30 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-// Removed: import { verifyAdminToken } from "@/lib/auth"
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken, getTokenFromRequest } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  console.log(`Middleware: Processing request for pathname: ${pathname}`)
+  const { pathname } = request.nextUrl;
 
-  // Protect admin routes (all paths starting with /admin, except /admin/login)
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
-    console.log("Middleware: Protecting admin route.")
-    const adminToken = request.cookies.get("admin-token")
+  // Check if the request is for admin routes (excluding login page)
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+    const token = getTokenFromRequest(request);
 
-    if (!adminToken) {
-      console.log("Middleware: Admin token not found, redirecting to login.")
-      const loginUrl = new URL("/admin/login", request.url)
-      return NextResponse.redirect(loginUrl)
+    if (!token) {
+      // Redirect to login if no token
+      return NextResponse.redirect(new URL('/admin/login', request.url));
     }
-    console.log("Middleware: Admin token found, proceeding.")
+
+    // Verify the token
+    const payload = await verifyToken(token);
+    if (!payload) {
+      // Redirect to login if token is invalid
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
   }
 
-  // Handle logout API route (clear cookie)
-  if (pathname === "/api/admin/logout") {
-    console.log("Middleware: Handling logout API route.")
-    const response = NextResponse.json({ success: true, message: "Logged out successfully" })
-    response.cookies.delete("admin-token") // Clear the admin-token cookie
-    return response
-  }
-
-  console.log("Middleware: Proceeding with request.")
-  return NextResponse.next()
+  // Allow the request to continue
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/logout"],
-}
+  matcher: ['/admin/:path*'],
+};
