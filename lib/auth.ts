@@ -1,39 +1,75 @@
-import jwt from "jsonwebtoken"
-import type { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from 'next/server';
+import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
+interface User {
+  username: string;
+  password: string;
+}
 
-export function verifyAdminToken(request: NextRequest) {
+// Mock user database - in production, you'd hash these passwords
+const users: User[] = [
+  { username: 'massageadmin', password: 'melhot20' },
+];
+
+const secret = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
+);
+
+export const authenticateUser = (username: string, password: string) => {
+  return users.find(
+    (user) => user.username === username && user.password === password
+  );
+};
+
+export async function createToken(username: string) {
+  return await new SignJWT({ username })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(secret);
+}
+
+export async function verifyToken(token: string) {
   try {
-    const token = request.cookies.get("admin-token")?.value
-    console.log("verifyAdminToken: Token found in request cookies:", !!token) // Log if token exists
-
-    if (!token) {
-      console.log("verifyAdminToken: No token found.")
-      return null
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET) as any
-    console.log("verifyAdminToken: Token decoded successfully for adminId:", decoded.adminId)
-    return decoded
+    const { payload } = await jwtVerify(token, secret);
+    return payload;
   } catch (error) {
-    console.error("verifyAdminToken: Token verification failed:", error)
-    return null
+    return null;
   }
 }
 
-export function requireAdmin(handler: Function) {
-  return async (request: NextRequest, ...args: any[]) => {
-    const admin = verifyAdminToken(request)
+export function getTokenFromRequest(request: NextRequest) {
+  return request.cookies.get('admin-token')?.value;
+}
 
-    if (!admin) {
-      console.log("requireAdmin: Unauthorized access, returning 401.")
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      })
+export function isAuthenticated(request: NextRequest): boolean {
+  const token = getTokenFromRequest(request);
+  return !!token;
+}
+
+// Higher-order function to protect API routes
+export function requireAdmin<T extends any[]>(
+  handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
+) {
+  return async (request: NextRequest, ...args: T) => {
+    const token = getTokenFromRequest(request);
+    
+    if (!token) {
+      return NextResponse.json(
+        { message: 'Unauthorized - No token provided' },
+        { status: 401 }
+      );
     }
 
-    return handler(request, ...args)
-  }
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json(
+        { message: 'Unauthorized - Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // Token is valid, proceed with the original handler
+    return handler(request, ...args);
+  };
 }

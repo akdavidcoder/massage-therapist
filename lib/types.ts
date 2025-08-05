@@ -1,6 +1,5 @@
 import { ObjectId } from 'mongodb'; // Import ObjectId
 
-
 export interface User {
   _id?: ObjectId
   name: string
@@ -11,6 +10,12 @@ export interface User {
   lastVisit?: Date
 }
 
+export type ServiceModel = {
+  name: string;
+  gender: 'male' | 'female';
+  imageUrl: string;
+};
+
 export interface Service {
   _id?: ObjectId
   name: string
@@ -20,6 +25,8 @@ export interface Service {
   prices: { [key: number]: number } // {30: 80, 60: 120, 90: 180}
   image?: string
   available: boolean
+  models: ServiceModel[]; // Add this line
+
   createdAt: Date
 }
 
@@ -42,6 +49,7 @@ export interface Booking {
   paymentMethod: "crypto"
   walletAddress?: string
   cryptoAmount?: number
+  model?: string // Added selected model
   notes?: string
   createdAt: Date
 }

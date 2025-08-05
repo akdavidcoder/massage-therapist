@@ -14,7 +14,7 @@ export function Footer() {
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="font-bold text-xl">Sophia Massage</span>
+              <span className="font-bold text-xl">Melhot Aesthetic Massage</span>
             </div>
             <p className="text-gray-400 text-sm">
               Professional massage therapy services focused on healing, relaxation, and rejuvenation. Licensed and
@@ -124,7 +124,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-400 text-sm">© 2025 Sophia Massage Therapy. All rights reserved.</p>
+          <p className="text-gray-400 text-sm">© 2025 Melhot Aesthetic Massage Therapy. All rights reserved.</p>
         </div>
       </div>
     </footer>

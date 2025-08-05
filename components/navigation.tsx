@@ -26,7 +26,7 @@ export function Navigation() {
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-lg">S</span>
             </div>
-            <span className="font-bold text-xl text-gray-900">Sophia Massage</span>
+            <span className="font-bold text-xl text-gray-900">Melhot Aesthetic Massage</span>
           </Link>
 
           {/* Desktop Navigation */}
