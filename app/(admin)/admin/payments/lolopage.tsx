@@ -447,7 +447,7 @@ export default function PaymentsPage() {
               <Label htmlFor="zellePhone">Zelle Phone (Optional)</Label>
               <Input
                 id="zellePhone"
-                placeholder="(555) 123-4567"
+                placeholder="480-287-2633"
                 value={formData.details.zellePhone || ''}
                 onChange={(e) => setFormData({
                   ...formData,

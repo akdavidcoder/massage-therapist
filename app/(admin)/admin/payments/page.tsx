@@ -17,7 +17,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 interface PaymentMethod {
   _id: string;
   name: string;
-  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle' | 'bank_transfer' | 'apple_pay' | 'google_pay' | 'stripe' | 'square';
+  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle' | 'bank_transfer' | 'apple_pay' | 'google_pay' | 'stripe' | 'square' | 'creditcard';
   enabled: boolean;
   details: {
     cashtag?: string;
@@ -53,7 +53,7 @@ interface PaymentMethod {
 
 interface PaymentMethodForm {
   name: string;
-  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle' | 'bank_transfer' | 'apple_pay' | 'google_pay' | 'stripe' | 'square';
+  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle' | 'bank_transfer' | 'apple_pay' | 'google_pay' | 'stripe' | 'square' | 'creditcard';
   enabled: boolean;
   details: {
     cashtag?: string;
@@ -94,7 +94,8 @@ const paymentTypeIcons = {
   apple_pay: <Apple className="w-5 h-5" />,
   google_pay: <Chrome className="w-5 h-5" />,
   stripe: <Zap className="w-5 h-5" />,
-  square: <Square className="w-5 h-5" />
+  square: <Square className="w-5 h-5" />,
+  creditcard: <CreditCard className="w-5 h-5" />
 };
 
 export default function AdminPaymentMethods() {
@@ -348,7 +349,7 @@ export default function AdminPaymentMethods() {
               <Label htmlFor="zellePhone">Zelle Phone (Optional)</Label>
               <Input
                 id="zellePhone"
-                placeholder="(555) 123-4567"
+                placeholder="480-287-2633"
                 value={formData.details.zellePhone || ''}
                 onChange={(e) => setFormData({
                   ...formData,
@@ -561,6 +562,7 @@ export default function AdminPaymentMethods() {
                         <SelectItem value="google_pay">Google Pay</SelectItem>
                         <SelectItem value="stripe">Stripe</SelectItem>
                         <SelectItem value="square">Square</SelectItem>
+                        <SelectItem value="creditcard">Credit Card</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

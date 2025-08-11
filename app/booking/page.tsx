@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { CalendarDays, Clock, Terminal, Loader2, Check, X, ChevronLeft, PartyPopper } from "lucide-react"
+import { CalendarDays, Clock, Terminal, Loader2, Check, X, ChevronLeft, PartyPopper, CheckCircle, Camera } from "lucide-react"
 import { format } from "date-fns"
 import type { Service, ServiceModel } from "@/lib/types"
 import ClientOnly from "@/components/ClientOnly"
@@ -25,7 +25,7 @@ type PaymentStatus = 'pending' | 'processing' | 'success' | 'failed'
 interface PaymentMethod {
   _id: string
   name: string
-  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle'
+  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle' | 'creditcard'
   details: {
     cashtag?: string
     paypalEmail?: string
@@ -58,6 +58,12 @@ export default function BookingPage() {
   const [transactionReference, setTransactionReference] = useState("")
   const [bookingComplete, setBookingComplete] = useState(false)
   const [currentBookingId, setCurrentBookingId] = useState<string | null>(null)
+  const [driverLicenseFrontFile, setDriverLicenseFrontFile] = useState<File | null>(null)
+  const [driverLicenseBackFile, setDriverLicenseBackFile] = useState<File | null>(null)
+  const [driverLicenseFrontUrl, setDriverLicenseFrontUrl] = useState<string>('')
+  const [driverLicenseBackUrl, setDriverLicenseBackUrl] = useState<string>('')
+  const [uploadingFront, setUploadingFront] = useState(false)
+  const [uploadingBack, setUploadingBack] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -89,7 +95,7 @@ export default function BookingPage() {
 
   // Show services and filter therapists based on client gender and service
   const filteredServices = services
-  const therapists = selectedServiceData?.models.filter(model => !therapistPreference || model.gender === therapistPreference) || []
+  const therapists = selectedServiceData?.models?.filter(model => model.gender === therapistPreference) || []
 
   const handleSubmitAndPay = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +118,8 @@ export default function BookingPage() {
         notes, 
         paymentMethod: "pending", 
         model: selectedModel?.name,
+        driverLicenseFrontUrl,
+        driverLicenseBackUrl,
         paymentStatus: 'pending'
       };
 
@@ -137,6 +145,78 @@ export default function BookingPage() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDriverLicenseUpload = async (file: File, side: 'front' | 'back') => {
+    const setUploading = side === 'front' ? setUploadingFront : setUploadingBack;
+    const setUrl = side === 'front' ? setDriverLicenseFrontUrl : setDriverLicenseBackUrl;
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setUrl(result.fileUrl);
+        toast({
+          title: "Upload Successful",
+          description: `Driver license ${side} uploaded successfully`
+        });
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Upload Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCameraCapture = async (side: 'front' | 'back') => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      
+      // Create a simple camera interface
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      
+      video.addEventListener('loadedmetadata', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert to blob and upload
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            const file = new File([blob], `license-${side}-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            await handleDriverLicenseUpload(file, side);
+          }
+          stream.getTracks().forEach(track => track.stop());
+        }, 'image/jpeg', 0.8);
+      });
+    } catch (error) {
+      toast({
+        title: "Camera Error",
+        description: "Could not access camera",
+        variant: "destructive"
+      });
     }
   };
 
@@ -210,6 +290,10 @@ export default function BookingPage() {
     setTransactionReference("")
     setBookingComplete(false)
     setCurrentBookingId(null)
+    setDriverLicenseFrontFile(null)
+    setDriverLicenseBackFile(null)
+    setDriverLicenseFrontUrl('')
+    setDriverLicenseBackUrl('')
     setStep('gender')
   }
 
@@ -222,6 +306,8 @@ export default function BookingPage() {
     clientInfo.email.trim() !== "" &&
     clientInfo.phone.trim() !== "" && 
     !!clientInfo.gender &&
+    !!driverLicenseFrontUrl &&
+    !!driverLicenseBackUrl &&
     (!selectedServiceData?.models?.length || !!selectedModel)
 
   if (loading) {
@@ -488,7 +574,7 @@ export default function BookingPage() {
                       type="tel" 
                       value={clientInfo.phone} 
                       onChange={(e) => setClientInfo({ ...clientInfo, phone: e.target.value })} 
-                      placeholder="(555) 123-4567" 
+                      placeholder="480-287-2633" 
                       required
                     />
                   </div>
@@ -505,6 +591,91 @@ export default function BookingPage() {
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-4">
+                    <Label>Driver License (Required - Both Sides)</Label>
+                    
+                    {/* Front Side */}
+                    <div>
+                      <Label className="text-sm font-medium">Front Side</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setDriverLicenseFrontFile(file);
+                              handleDriverLicenseUpload(file, 'front');
+                            }
+                          }}
+                          disabled={uploadingFront}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCameraCapture('front')}
+                          disabled={uploadingFront}
+                        >
+                          <Camera className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      {uploadingFront && (
+                        <div className="flex items-center text-sm text-gray-600 mt-1">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Uploading front...
+                        </div>
+                      )}
+                      {driverLicenseFrontUrl && (
+                        <div className="flex items-center text-sm text-green-600 mt-1">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Front uploaded successfully
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Back Side */}
+                    <div>
+                      <Label className="text-sm font-medium">Back Side</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setDriverLicenseBackFile(file);
+                              handleDriverLicenseUpload(file, 'back');
+                            }
+                          }}
+                          disabled={uploadingBack}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCameraCapture('back')}
+                          disabled={uploadingBack}
+                        >
+                          <Camera className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      {uploadingBack && (
+                        <div className="flex items-center text-sm text-gray-600 mt-1">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Uploading back...
+                        </div>
+                      )}
+                      {driverLicenseBackUrl && (
+                        <div className="flex items-center text-sm text-green-600 mt-1">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Back uploaded successfully
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="notes">Special Requests (Optional)</Label>

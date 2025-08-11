@@ -1,3 +1,4 @@
+// app/about/page.tsx
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -5,65 +6,65 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import Image from "next/image"
-import { Award, Heart, Users, Clock, Star, CheckCircle, Play } from "lucide-react"
+import { Award, Heart, Users, Clock, Star, CheckCircle, Play, Globe } from "lucide-react"
 
 export default function AboutPage() {
   const qualifications = [
     {
-      title: "Licensed Massage Therapist",
-      institution: "California Massage Therapy Council",
-      year: "2014",
+      title: "Licensed Wellness Institution",
+      institution: "Swiss Federal Office of Public Health (FOPH)",
+      year: "2013",
       type: "License",
     },
     {
-      title: "Certified Aromatherapy Specialist",
-      institution: "National Association for Holistic Aromatherapy",
-      year: "2016",
-      type: "Certification",
-    },
-    {
-      title: "Deep Tissue Massage Certification",
-      institution: "American Massage Therapy Association",
+      title: "Holistic Therapy Accreditation",
+      institution: "International Council for Wellness and Healing (ICWH)",
       year: "2015",
       type: "Certification",
     },
     {
-      title: "Reflexology Practitioner",
-      institution: "International Institute of Reflexology",
-      year: "2017",
+      title: "Advanced Manual Therapy Program",
+      institution: "Zurich Institute of Massage Science",
+      year: "2016",
       type: "Certification",
     },
     {
-      title: "Prenatal Massage Specialist",
-      institution: "Body Therapy Institute",
+      title: "Global Spa & Wellness Compliance",
+      institution: "World Wellness Federation",
       year: "2018",
+      type: "Certification",
+    },
+    {
+      title: "Therapeutic Aromatherapy Diploma",
+      institution: "Swiss Aromatherapy Guild",
+      year: "2019",
       type: "Certification",
     },
   ]
 
   const achievements = [
-    { icon: Users, label: "500+ Happy Clients", value: "500+" },
-    { icon: Clock, label: "10+ Years Experience", value: "10+" },
-    { icon: Star, label: "4.9/5 Average Rating", value: "4.9/5" },
-    { icon: Award, label: "Licensed Professional", value: "Licensed" },
+    { icon: Users, label: "10,000+ Global Clients", value: "10,000+" },
+    { icon: Clock, label: "12+ Years of Service", value: "12+" },
+    { icon: Star, label: "Rated 4.9/5 Worldwide", value: "4.9/5" },
+    { icon: Globe, label: "Centers in 4 Countries", value: "4+" },
   ]
 
   const philosophy = [
     {
-      title: "Holistic Healing",
+      title: "Science Meets Soul",
       description:
-        "I believe in treating the whole person, not just the symptoms. Every session is tailored to your unique needs.",
+        "We blend Swiss precision with holistic methodologies to deliver a personalized healing experience that transcends borders.",
       icon: Heart,
     },
     {
-      title: "Professional Excellence",
+      title: "Global Standards, Local Care",
       description:
-        "Continuous education and staying current with the latest techniques ensures you receive the best care.",
+        "Our certified practitioners across Switzerland, Canada, the USA, and Australia follow world-class therapeutic standards tailored to local needs.",
       icon: Award,
     },
     {
-      title: "Safe Environment",
-      description: "Creating a comfortable, respectful, and healing space where you can truly relax and rejuvenate.",
+      title: "Safe, Inclusive Healing Spaces",
+      description: "Each of our centers promotes a welcoming and professional environment for all individuals seeking healing and renewal.",
       icon: CheckCircle,
     },
   ]
@@ -77,67 +78,64 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <Badge className="mb-4">About Sophia</Badge>
-              <h1 className="text-5xl font-bold text-gray-900 mb-6">Your Wellness Journey Starts Here</h1>
+              <Badge className="mb-4">About Melhot Aesthetic International</Badge>
+              <h1 className="text-5xl font-bold text-gray-900 mb-6">Global Wellness, Rooted in Switzerland</h1>
               <p className="text-xl text-gray-700 mb-8">
-                With over 10 years of experience in therapeutic massage, I'm passionate about helping clients achieve
-                optimal wellness through the healing power of touch. Licensed and certified, I specialize in various
-                massage techniques tailored to your unique needs.
+                Melhot Aesthetic International is a Swiss-based holistic wellness company with centers in Canada, USA, and
+                Australia. We specialize in integrative massage therapies, using certified techniques and cutting-edge
+                approaches to support your wellness journey.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg">
-                  <Link href="/booking">Book Your Session</Link>
+                  <Link href="/booking">Book a Session</Link>
                 </Button>
                 <Button variant="outline" size="lg" className="bg-transparent">
                   <Play className="w-4 h-4 mr-2" />
-                  Watch Welcome Video
+                  Watch Brand Video
                 </Button>
               </div>
             </div>
             <div className="relative">
               <Image
                 src="https://images.fresha.com/lead-images/placeholders/massage-52.jpg?class=venue-gallery-mobile"
-                alt="Sophia - Professional Massage Therapist"
+                alt="Melhot Aesthetic Global Massage"
                 width={500}
                 height={600}
                 className="rounded-lg shadow-2xl"
               />
               <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-lg shadow-lg">
-                <div className="text-2xl font-bold text-primary">10+</div>
-                <div className="text-sm text-gray-600">Years Experience</div>
+                <div className="text-2xl font-bold text-primary">12+</div>
+                <div className="text-sm text-gray-600">Years of Excellence</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Full Bio Section */}
+      {/* Company Story */}
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-lg max-w-none">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">My Story</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Our Story</h2>
             <div className="space-y-6 text-gray-700">
               <p>
-                My journey into massage therapy began over a decade ago when I experienced firsthand the transformative
-                power of therapeutic touch during my own recovery from a sports injury. What started as personal healing
-                became a calling to help others find relief, relaxation, and renewed vitality.
+                Founded in the heart of Switzerland, Melhot Aesthetic International was born from a desire to make healing
+                accessible, scientific, and deeply human. Our founders combined medical insight with holistic
+                philosophy, aiming to transform how people experience wellness globally.
               </p>
               <p>
-                After completing my initial certification in 2014, I've continuously expanded my expertise through
-                advanced training in specialized techniques including deep tissue massage, aromatherapy, reflexology,
-                and prenatal massage. I believe that learning never stops, and I regularly attend workshops and
-                continuing education courses to stay current with the latest developments in massage therapy.
+                Over the years, we have expanded into Canada, the United States, and Australia, bringing our Swiss
+                standards and personalized care to a global community. Each branch is staffed by certified professionals
+                trained under our unified protocols.
               </p>
               <p>
-                Over the years, I've had the privilege of working with clients from all walks of life – from busy
-                professionals seeking stress relief to athletes recovering from injuries, and expectant mothers looking
-                for comfort during pregnancy. Each client brings unique needs and challenges, which is what makes this
-                work so rewarding and keeps me passionate about what I do.
+                Our services have empowered athletes, professionals, expecting mothers, and everyday individuals to
+                reclaim balance, health, and vitality. Through our global team, we provide continuity of care whether
+                you're in Zurich, Toronto, Sydney, or San Francisco.
               </p>
               <p>
-                My approach combines technical expertise with intuitive touch, always listening to what your body needs.
-                I create a safe, comfortable environment where healing can happen naturally, and I'm committed to
-                helping you achieve your wellness goals through personalized care.
+                Melhot Aesthetic is more than a wellness provider — we are your lifelong partner in healing, offering you the
+                highest standard of care wherever you are.
               </p>
             </div>
           </div>
@@ -148,8 +146,8 @@ export default function AboutPage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">By the Numbers</h2>
-            <p className="text-xl text-gray-600">A decade of dedication to healing and wellness</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Global Impact</h2>
+            <p className="text-xl text-gray-600">Proven wellness. Trusted worldwide.</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {achievements.map((achievement, index) => (
@@ -169,8 +167,8 @@ export default function AboutPage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Qualifications & Certifications</h2>
-            <p className="text-xl text-gray-600">Committed to professional excellence and continuous learning</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Global Certifications</h2>
+            <p className="text-xl text-gray-600">World-class training, international recognition</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {qualifications.map((qual, index) => (
@@ -186,7 +184,7 @@ export default function AboutPage() {
                         <Badge variant="outline">{qual.type}</Badge>
                       </div>
                       <p className="text-gray-600 mb-1">{qual.institution}</p>
-                      <p className="text-sm text-gray-500">Obtained: {qual.year}</p>
+                      <p className="text-sm text-gray-500">Issued: {qual.year}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -200,11 +198,10 @@ export default function AboutPage() {
       <section className="py-20 bg-primary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">My Philosophy & Mission</h2>
+            <h2 className="text-3xl font-bold mb-4">Our Philosophy & Mission</h2>
             <p className="text-xl opacity-90 max-w-3xl mx-auto">
-              "I believe that healing happens when we create space for the body's natural ability to restore itself. My
-              mission is to provide that space through skilled, compassionate touch and genuine care for each person's
-              unique wellness journey."
+              "To elevate global well-being by integrating the wisdom of nature, the precision of science, and the
+              compassion of human touch — one healing experience at a time."
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -221,19 +218,20 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Begin Your Healing Journey?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Join the Melhot Aesthetic Experience</h2>
           <p className="text-xl text-gray-600 mb-8">
-            Let's work together to help you feel your best. Book your personalized massage therapy session today.
+            Book your wellness session with any of our international branches. Let us help you feel renewed, centered,
+            and energized.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg">
-              <Link href="/booking">Schedule Your Appointment</Link>
+              <Link href="/booking">Book Now</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="bg-transparent">
-              <Link href="/contact">Ask a Question</Link>
+              <Link href="/contact">Contact Our Team</Link>
             </Button>
           </div>
         </div>

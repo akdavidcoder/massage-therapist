@@ -75,7 +75,7 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: "Phone",
-      details: "(555) 123-4567",
+      details: "480-287-2633",
       description: "Call or text for appointments",
       action: "tel:+15551234567",
       actionText: "Call Now",
@@ -83,7 +83,7 @@ export default function ContactPage() {
     {
       icon: MessageSquare,
       title: "WhatsApp",
-      details: "(555) 123-4567",
+      details: "480-287-2633",
       description: "Quick messaging for appointments",
       action: "https://wa.me/15551234567",
       actionText: "Message on WhatsApp",
@@ -91,15 +91,15 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: "Email",
-      details: "sophia@massagetherapy.com",
+      details: "ceoath147@gmail.com",
       description: "We respond within 24 hours",
-      action: "mailto:sophia@massagetherapy.com",
+      action: "mailto:ceoath147@gmail.com",
       actionText: "Send Email",
     },
     {
       icon: MapPin,
       title: "Studio Address",
-      details: "123 Wellness Street, Spa City, CA 90210",
+      details: "Switzerland",
       description: "Convenient downtown location",
       action: "https://maps.google.com/?q=123+Wellness+Street+Spa+City+CA",
       actionText: "Get Directions",
@@ -190,7 +190,7 @@ export default function ContactPage() {
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          placeholder="(555) 123-4567"
+                          placeholder="480-287-2633"
                         />
                       </div>
                     </div>
@@ -259,14 +259,14 @@ export default function ContactPage() {
                     <div className="text-center">
                       <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500 font-medium">Interactive Map</p>
-                      <p className="text-sm text-gray-400">123 Wellness Street</p>
-                      <p className="text-sm text-gray-400">Spa City, CA 90210</p>
+                      <p className="text-sm text-gray-400">Switzerland </p>
+                      {/* <p className="text-sm text-gray-400">Spa City, CA 90210</p> */}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-gray-900">Studio Location</p>
-                    <p className="text-gray-700">123 Wellness Street</p>
-                    <p className="text-gray-700">Spa City, CA 90210</p>
+                    <p className="text-gray-700">Switzerland </p>
+                    {/* <p className="text-gray-700">Spa City, CA 90210</p> */}
                     <p className="text-sm text-gray-600">
                       Convenient downtown location with free parking available. Easily accessible by public
                       transportation.

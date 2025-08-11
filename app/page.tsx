@@ -254,8 +254,7 @@ export default function HomePage() {
                 <div className="flex items-center space-x-3">
                   <MapPin className="w-6 h-6 text-primary" />
                   <div>
-                    <div className="font-semibold">123 Wellness Street</div>
-                    <div className="text-gray-600">Spa City, CA 90210</div>
+                    <div className="font-semibold">Switzerland </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -268,7 +267,7 @@ export default function HomePage() {
                 <div className="flex items-center space-x-3">
                   <Phone className="w-6 h-6 text-primary" />
                   <div>
-                    <div className="font-semibold">(555) 123-4567</div>
+                    <div className="font-semibold">480-287-2633</div>
                     <div className="text-gray-600">Call or text for appointments</div>
                   </div>
                 </div>
@@ -282,7 +281,7 @@ export default function HomePage() {
                 <div className="text-center">
                   <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">Interactive Map</p>
-                  <p className="text-sm text-gray-400">123 Wellness Street, Spa City, CA</p>
+                  <p className="text-sm text-gray-400">Switzerland</p>
                 </div>
               </div>
             </div>

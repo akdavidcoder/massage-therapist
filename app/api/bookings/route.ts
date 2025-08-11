@@ -32,6 +32,8 @@ export async function POST(request: NextRequest) {
       paymentMethod: "crypto",
       cryptoAmount: body.price,
       model: body.model, // Added selected model
+      driverLicenseFrontUrl: body.driverLicenseFrontUrl, // Added driver license front URL
+      driverLicenseBackUrl: body.driverLicenseBackUrl, // Added driver license back URL
       notes: body.notes,
       createdAt: new Date(),
     }
