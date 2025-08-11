@@ -92,18 +92,18 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-center space-x-2 text-gray-400">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">(555) 123-4567</span>
+                <span className="text-sm">480-287-2633</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-400">
                 <Mail className="w-4 h-4" />
-                <span className="text-sm">sophia@massagetherapy.com</span>
+                <span className="text-sm">ceoath147@gmail.com</span>
               </div>
               <div className="flex items-start space-x-2 text-gray-400">
                 <MapPin className="w-4 h-4 mt-1" />
                 <span className="text-sm">
-                  123 Wellness Street
+                  Switzerland 
                   <br />
-                  Spa City, CA 90210
+                  {/* Spa City, CA 90210 */}
                 </span>
               </div>
             </div>

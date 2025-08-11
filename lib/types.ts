@@ -50,6 +50,8 @@ export interface Booking {
   walletAddress?: string
   cryptoAmount?: number
   model?: string // Added selected model
+  driverLicenseFrontUrl?: string // Added driver license front URL
+  driverLicenseBackUrl?: string // Added driver license back URL
   notes?: string
   createdAt: Date
 }

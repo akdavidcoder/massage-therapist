@@ -2,7 +2,7 @@
 require('dotenv').config({ path: './.env' }); // Make sure this path is correct relative to where you run the script
 
 const clientPromise = require("../lib/mongodb").default // Access the default export
-const bcrypt = require("bcryptjs") // Use require for bcryptjs as well
+const crypto = require("crypto") // Use Node.js built-in crypto module
 
 async function seedServices() {
   try {
@@ -126,7 +126,9 @@ async function seedServices() {
     // Also create an admin user if it doesn't exist
     const adminExists = await db.collection("admins").countDocuments()
     if (adminExists === 0) {
-      const hashedPassword = await bcrypt.hash("admin123", 10)
+      // Using Node.js crypto for password hashing (simple hash for demo purposes)
+      // In production, consider using a more secure hashing method
+      const hashedPassword = crypto.createHash('sha256').update('admin123').digest('hex')
 
       await db.collection("admins").insertOne({
         email: "admin@massagetherapy.com",

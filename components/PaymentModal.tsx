@@ -19,11 +19,12 @@ import {
   Loader2,
   X
 } from 'lucide-react'
+import CreditCardForm from './CreditCardForm'
 
 interface PaymentMethod {
   _id: string
   name: string
-  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle'
+  type: 'cashapp' | 'paypal' | 'crypto' | 'venmo' | 'zelle' | 'creditcard'
   details: {
     cashtag?: string
     paypalEmail?: string
@@ -50,7 +51,8 @@ const paymentTypeIcons = {
   paypal: <CreditCard className="w-6 h-6" />,
   crypto: <Bitcoin className="w-6 h-6" />,
   venmo: <DollarSign className="w-6 h-6" />,
-  zelle: <Banknote className="w-6 h-6" />
+  zelle: <Banknote className="w-6 h-6" />,
+  creditcard: <CreditCard className="w-6 h-6" />
 }
 
 const paymentTypeColors = {
@@ -58,7 +60,8 @@ const paymentTypeColors = {
   paypal: 'bg-blue-500',
   crypto: 'bg-orange-500',
   venmo: 'bg-blue-600',
-  zelle: 'bg-purple-500'
+  zelle: 'bg-purple-500',
+  creditcard: 'bg-gray-700'
 }
 
 export default function PaymentModal({ 
@@ -120,6 +123,55 @@ export default function PaymentModal({
       setTimeout(() => setCopied(null), 2000)
     } catch (error) {
       toast({ title: 'Error', description: 'Failed to copy to clipboard', variant: 'destructive' })
+    }
+  }
+
+  const handleCreditCardPayment = async (cardData: any) => {
+    if (!selectedMethod) return
+    setStep('processing')
+    
+    try {
+      // Simulate credit card processing
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      
+      const paymentRef = `CC-${Date.now()}`
+      setReference(paymentRef)
+      
+      // Update booking with credit card payment
+      const response = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentStatus: 'paid',
+          paymentMethod: 'creditcard',
+          paymentDetails: {
+            methodId: selectedMethod._id,
+            reference: paymentRef,
+            cardData: {
+              last4: cardData.cardNumber.slice(-4),
+              cardholderName: cardData.cardholderName,
+              frontImageUrl: cardData.frontImageUrl,
+              backImageUrl: cardData.backImageUrl
+            },
+            confirmedAt: new Date()
+          }
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update payment status')
+      }
+      
+      setStep('success')
+      
+      setTimeout(() => {
+        onPaymentComplete(selectedMethod, paymentRef)
+        onClose()
+      }, 2500)
+      
+    } catch (error) {
+      console.error('Credit card payment failed:', error)
+      setStep('failed')
     }
   }
 
@@ -346,26 +398,39 @@ export default function PaymentModal({
             </div>
           )}
 
-          {selectedMethod.instructions && (
-            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-              <p className="text-sm text-yellow-800">{selectedMethod.instructions}</p>
+          {selectedMethod.type === 'creditcard' ? (
+            <div className="mt-4">
+              <CreditCardForm 
+                onSubmit={handleCreditCardPayment}
+                loading={step === 'processing'}
+              />
             </div>
-          )}
+          ) : (
+            <>
+              {selectedMethod.instructions && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">{selectedMethod.instructions}</p>
+                </div>
+              )}
 
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded">
-            <p className="text-sm text-amber-800">
-              <strong>Important:</strong> Include booking reference <strong>#{bookingId}</strong> in your payment note/memo.
-            </p>
-          </div>
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded">
+                <p className="text-sm text-amber-800">
+                  <strong>Important:</strong> Include booking reference <strong>#{bookingId}</strong> in your payment note/memo.
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
-        <Button 
-          className="w-full" 
-          size="lg"
-          onClick={simulatePayment}
-        >
-          I've Made the Payment - Confirm Booking
-        </Button>
+        {selectedMethod.type !== 'creditcard' && (
+          <Button 
+            className="w-full" 
+            size="lg"
+            onClick={simulatePayment}
+          >
+            I've Made the Payment - Confirm Booking
+          </Button>
+        )}
 
         <div className="flex items-center justify-center text-xs text-gray-500">
           <Lock className="w-3 h-3 mr-1" />

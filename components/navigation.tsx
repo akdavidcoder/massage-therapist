@@ -46,7 +46,7 @@ export function Navigation() {
           <div className="hidden lg:flex items-center space-x-4">
             <div className="flex items-center text-sm text-gray-600">
               <Phone className="w-4 h-4 mr-1" />
-              <span>(555) 123-4567</span>
+              <span>480-287-2633</span>
             </div>
             <Button asChild>
               <Link href="/booking">Book Now</Link>
@@ -78,7 +78,7 @@ export function Navigation() {
               <div className="px-3 py-2 border-t">
                 <div className="flex items-center text-sm text-gray-600 mb-2">
                   <Phone className="w-4 h-4 mr-2" />
-                  <span>(555) 123-4567</span>
+                  <span>480-287-2633</span>
                 </div>
                 <Button asChild className="w-full">
                   <Link href="/booking">Book Now</Link>
