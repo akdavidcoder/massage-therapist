@@ -4,7 +4,7 @@ import { uploadToCloudinary } from '@/lib/cloudinary';
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -31,16 +31,19 @@ export async function POST(request: NextRequest) {
     // Upload to Cloudinary
     const fileUrl = await uploadToCloudinary(buffer, fileName);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       fileUrl,
-      message: 'File uploaded successfully' 
+      message: 'File uploaded successfully'
     });
 
   } catch (error) {
     console.error('Upload error:', error);
+
+    // Include detail temporarily for debugging
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Failed to upload file' }, 
+      { error: 'Failed to upload file', detail },
       { status: 500 }
     );
   }

@@ -20,7 +20,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error) {
+    // Log full error server-side for debugging
     console.error('Therapist upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+
+    // Return the error message (temporary - do NOT keep in production)
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: 'Upload failed', detail }, { status: 500 });
   }
 }
