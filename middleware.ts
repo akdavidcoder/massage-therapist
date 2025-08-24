@@ -1,30 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, getTokenFromRequest } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-  // Check if the request is for admin routes (excluding login page)
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    const token = getTokenFromRequest(request);
+  // Handle CORS preflight for API routes so browser OPTIONS won't fall through to /404
+  if (req.method === 'OPTIONS' && pathname.startsWith('/api/')) {
+    const res = NextResponse.json(null, { status: 204 });
+    res.headers.set('Access-Control-Allow-Origin', '*'); // adjust origin in prod if needed
+    res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    res.headers.set('Access-Control-Max-Age', '86400');
+    return res;
+  }
 
-    if (!token) {
-      // Redirect to login if no token
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-
-    // Verify the token
-    const payload = await verifyToken(token);
-    if (!payload) {
-      // Redirect to login if token is invalid
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+  // For admin API routes, log auth-related headers for debugging (temporary)
+  if (pathname.startsWith('/api/admin')) {
+    try {
+      // Note: console.error in middleware will show up in Vercel logs for the request
+      console.error('DEBUG middleware - incoming admin request:', {
+        method: req.method,
+        url: req.url,
+        cookie: req.headers.get('cookie'),
+        authorization: req.headers.get('authorization'),
+      });
+    } catch (e) {
+      console.error('DEBUG middleware - logging failed:', String(e));
     }
   }
 
-  // Allow the request to continue
+  // Let all other requests proceed
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/api/:path*'],
 };
