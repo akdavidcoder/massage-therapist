@@ -4,14 +4,17 @@ import clientPromise from '@/lib/mongodb';
 
 async function requireAdmin(request: NextRequest) {
   const token = request.cookies.get('admin-token')?.value;
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!token) {
+    console.error('Missing admin-token cookie');
+    return NextResponse.json({ error: 'Unauthorized - Missing token' }, { status: 401 });
+  }
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     await jwtVerify(token, secret);
     return null;
   } catch (e) {
-    console.error('API Auth Error:', e);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('Invalid or expired token:', e);
+    return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 });
   }
 }
 
