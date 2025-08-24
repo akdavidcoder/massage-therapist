@@ -26,6 +26,7 @@ export default function TherapistsPage() {
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [editingTherapist, setEditingTherapist] = useState<Therapist | null>(null);
   const [formData, setFormData] = useState<Therapist>({
     name: '',
@@ -42,7 +43,7 @@ export default function TherapistsPage() {
   // Fetch therapists
   const fetchTherapists = async () => {
     try {
-      const response = await fetch('/api/admin/therapists');
+      const response = await fetch('/api/admin/therapists', { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
         setTherapists(data);
@@ -58,29 +59,56 @@ export default function TherapistsPage() {
     fetchTherapists();
   }, []);
 
-  // Handle form submission
+  // Upload to Cloudinary via secure API route
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+
+      const res = await fetch('/api/upload/therapist', {
+        method: 'POST',
+        body: fd
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      const { url } = await res.json();
+      setFormData(prev => ({ ...prev, imageUrl: url }));
+    } catch (err) {
+      console.error('Cloudinary upload error:', err);
+      alert('Image upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle form submission (create/update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const url = editingTherapist 
+      const url = editingTherapist
         ? `/api/admin/therapists/${editingTherapist._id}`
         : '/api/admin/therapists';
-      
+
       const method = editingTherapist ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        fetchTherapists();
+        await fetchTherapists();
         setIsDialogOpen(false);
         resetForm();
+      } else {
+        const er = await response.json().catch(() => ({}));
+        alert(er?.error || 'Failed to save therapist');
       }
     } catch (error) {
       console.error('Error saving therapist:', error);
@@ -89,17 +117,17 @@ export default function TherapistsPage() {
 
   // Handle delete
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this therapist?')) {
-      try {
-        const response = await fetch(`/api/admin/therapists/${id}`, {
-          method: 'DELETE',
-        });
-        if (response.ok) {
-          fetchTherapists();
-        }
-      } catch (error) {
-        console.error('Error deleting therapist:', error);
+    if (!confirm('Are you sure you want to delete this therapist?')) return;
+    try {
+      const response = await fetch(`/api/admin/therapists/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        fetchTherapists();
+      } else {
+        const er = await response.json().catch(() => ({}));
+        alert(er?.error || 'Failed to delete therapist');
       }
+    } catch (error) {
+      console.error('Error deleting therapist:', error);
     }
   };
 
@@ -144,14 +172,15 @@ export default function TherapistsPage() {
           <DialogTrigger asChild>
             <Button onClick={resetForm}>Add New Therapist</Button>
           </DialogTrigger>
-          <DialogContent 
-            className="w-full max-w-md max-h-[90vh] overflow-y-auto p-4 rounded-xl"
-          >
+
+          {/* Mobile-safe, scrollable dialog */}
+          <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-xl">
             <DialogHeader>
               <DialogTitle>
                 {editingTherapist ? 'Edit Therapist' : 'Add New Therapist'}
               </DialogTitle>
             </DialogHeader>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Name</Label>
@@ -162,6 +191,7 @@ export default function TherapistsPage() {
                   required
                 />
               </div>
+
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -172,6 +202,7 @@ export default function TherapistsPage() {
                   required
                 />
               </div>
+
               <div>
                 <Label htmlFor="phone">Phone</Label>
                 <Input
@@ -181,6 +212,7 @@ export default function TherapistsPage() {
                   required
                 />
               </div>
+
               <div>
                 <Label htmlFor="specialties">Specialties (comma-separated)</Label>
                 <Input
@@ -190,6 +222,7 @@ export default function TherapistsPage() {
                   placeholder="Deep Tissue, Swedish, Hot Stone"
                 />
               </div>
+
               <div>
                 <Label htmlFor="experience">Years of Experience</Label>
                 <Input
@@ -200,6 +233,7 @@ export default function TherapistsPage() {
                   min="0"
                 />
               </div>
+
               <div>
                 <Label htmlFor="bio">Bio</Label>
                 <Textarea
@@ -209,16 +243,26 @@ export default function TherapistsPage() {
                   rows={3}
                 />
               </div>
+
+              {/* New: secure image upload */}
               <div>
-                <Label htmlFor="imageUrl">Image URL</Label>
+                <Label htmlFor="profilePic">Profile Picture</Label>
                 <Input
-                  id="imageUrl"
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
+                  id="profilePic"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
                 />
+                {uploading && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+                {formData.imageUrl && (
+                  <img
+                    src={formData.imageUrl}
+                    alt="Profile Preview"
+                    className="w-20 h-20 rounded-full mt-2 object-cover border"
+                  />
+                )}
               </div>
+
               <div>
                 <Label htmlFor="gender">Gender</Label>
                 <select
@@ -231,6 +275,7 @@ export default function TherapistsPage() {
                   <option value="female">Female</option>
                 </select>
               </div>
+
               <div>
                 <Label htmlFor="status">Status</Label>
                 <select
@@ -243,13 +288,14 @@ export default function TherapistsPage() {
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
+
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
+                <Button type="submit" className="flex-1" disabled={uploading}>
                   {editingTherapist ? 'Update' : 'Create'}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                   className="flex-1"
                 >
@@ -261,6 +307,7 @@ export default function TherapistsPage() {
         </Dialog>
       </div>
 
+      {/* Therapist Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {therapists.map((therapist) => (
           <Card key={therapist._id}>
@@ -268,8 +315,8 @@ export default function TherapistsPage() {
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   {therapist.imageUrl && (
-                    <img 
-                      src={therapist.imageUrl} 
+                    <img
+                      src={therapist.imageUrl}
                       alt={therapist.name}
                       className="w-12 h-12 rounded-full object-cover"
                       onError={(e) => {
@@ -294,7 +341,7 @@ export default function TherapistsPage() {
                 <p className="text-sm text-gray-600">📧 {therapist.email}</p>
                 <p className="text-sm text-gray-600">📞 {therapist.phone}</p>
                 <p className="text-sm text-gray-600">🎯 {therapist.experience} years experience</p>
-                
+
                 {therapist.specialties.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {therapist.specialties.map((specialty, index) => (
@@ -304,21 +351,21 @@ export default function TherapistsPage() {
                     ))}
                   </div>
                 )}
-                
+
                 {therapist.bio && (
                   <p className="text-sm text-gray-700 mt-2">{therapist.bio}</p>
                 )}
-                
+
                 <div className="flex gap-2 mt-4">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => openEditDialog(therapist)}
                   >
                     Edit
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="destructive"
                     onClick={() => handleDelete(therapist._id!)}
                   >
